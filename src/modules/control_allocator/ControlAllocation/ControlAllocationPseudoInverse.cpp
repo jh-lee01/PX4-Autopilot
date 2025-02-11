@@ -63,10 +63,10 @@ ControlAllocationPseudoInverse::updatePseudoInverse()
 		eff_tmp(2, 0) = _effectiveness(2, 0); eff_tmp(2, 1) = _effectiveness(2, 1); eff_tmp(2, 2) = _effectiveness(2, 2); eff_tmp(2, 3) = _effectiveness(2, 3);
 		eff_tmp(3, 0) = _effectiveness(5, 0); eff_tmp(3, 1) = _effectiveness(5, 1); eff_tmp(3, 2) = _effectiveness(5, 2); eff_tmp(3, 3) = _effectiveness(5, 3);
 
-		for (int i = 0; i < 4; i++) {
-			PX4_INFO("eff_tmp(%d, *): %f %f %f %f", i, double (eff_tmp(i, 0)), double (eff_tmp(i, 1)), double (eff_tmp(i, 2)),
-				 double (eff_tmp(i, 3)));
-		}
+		// for (int i = 0; i < 4; i++) {
+		// 	PX4_INFO("eff_tmp(%d, *): %f %f %f %f", i, double (eff_tmp(i, 0)), double (eff_tmp(i, 1)), double (eff_tmp(i, 2)),
+		// 		 double (eff_tmp(i, 3)));
+		// }
 
 		matrix::Matrix<float, 4UL, 4UL> mix_tmp;
 		matrix::geninv(eff_tmp, mix_tmp);
@@ -79,12 +79,12 @@ ControlAllocationPseudoInverse::updatePseudoInverse()
 
 		// matrix::geninv(_effectiveness, _mix);
 
-		for (int i = 0; i < NUM_ACTUATORS; i++) {
-			PX4_INFO("mix(%d, *): %f %f %f %f %f %f", i, double (_mix(i, 0)), double (_mix(i, 1)), double (_mix(i, 2)),
-				 double (_mix(i, 3)), double (_mix(i, 4)), double (_mix(i, 5)));
-		}
+		// for (int i = 0; i < NUM_ACTUATORS; i++) {
+		// 	PX4_INFO("mix(%d, *): %f %f %f %f %f %f", i, double (_mix(i, 0)), double (_mix(i, 1)), double (_mix(i, 2)),
+		// 		 double (_mix(i, 3)), double (_mix(i, 4)), double (_mix(i, 5)));
+		// }
 
-		if (_normalization_needs_update && !_had_actuator_failure) {
+		if (!_had_actuator_failure) {
 			updateControlAllocationMatrixScale();
 			_normalization_needs_update = false;
 		}
@@ -203,6 +203,6 @@ ControlAllocationPseudoInverse::allocate()
 
 	// Allocate
 	_actuator_sp = _actuator_trim + _mix * (_control_sp - _control_trim);
-	PX4_INFO("actuator_sp: %f %f %f %f", double (_actuator_sp(0)), double (_actuator_sp(1)), double (_actuator_sp(2)),
-		 double (_actuator_sp(3)));
+	// PX4_INFO("actuator_sp: %f %f %f %f", double (_actuator_sp(0)), double (_actuator_sp(1)), double (_actuator_sp(2)),
+	// 	 double (_actuator_sp(3)));
 }
