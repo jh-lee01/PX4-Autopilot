@@ -49,6 +49,35 @@
 using namespace matrix;
 using namespace time_literals;
 
+// Geometry set 1: Perching
+const float ControlAllocator::values_30[12] = {
+	0.06f, 0.19f, -0.47f,
+	-0.16f, -0.19f, -0.47f,
+	0.06f, -0.19f, -0.47f,
+	-0.16f, 0.19f, -0.47f
+};
+
+const float ControlAllocator::values_60[12] = {
+	-0.22f, 0.19f, -0.21f,
+	-0.45f, -0.19f, -0.21f,
+	-0.22f, -0.19f, -0.21f,
+	-0.45f, 0.19f, -0.21f
+};
+
+const float ControlAllocator::values_90[12] = {
+	-0.23f, 0.19f, -0.07f,
+	-0.46f, -0.19f, -0.07f,
+	-0.23f, -0.19f, -0.07f,
+	-0.46f, 0.19f, -0.07f
+};
+
+const char *param_names[12] = {
+	"CA_ROTOR0_PX", "CA_ROTOR0_PY", "CA_ROTOR0_PZ",
+	"CA_ROTOR1_PX", "CA_ROTOR1_PY", "CA_ROTOR1_PZ",
+	"CA_ROTOR2_PX", "CA_ROTOR2_PY", "CA_ROTOR2_PZ",
+	"CA_ROTOR3_PX", "CA_ROTOR3_PY", "CA_ROTOR3_PZ"
+};
+
 ControlAllocator::ControlAllocator() :
 	ModuleParams(nullptr),
 	ScheduledWorkItem(MODULE_NAME, px4::wq_configurations::rate_ctrl),
@@ -382,6 +411,65 @@ ControlAllocator::Run()
 			_timestamp_sample = vehicle_thrust_setpoint.timestamp_sample;
 		}
 	}
+
+	// ---------------------
+	// RC input update check
+	// ---------------------
+	input_rc_s input_rc;
+
+	// static float const *previous_selected_values = nullptr;
+	float const *selected_values = nullptr;
+
+	if (_input_rc_sub.update(&input_rc)) {
+		// read channel 5
+		uint16_t rc_value = input_rc.values[4];
+
+		if (rc_value < 1200) {
+			selected_values = values_30;
+		} else if (rc_value < 1700) {
+			selected_values = values_30;
+		} else {
+			selected_values = values_30;
+		}
+
+		// if ((input_rc.values[4] != _last_rc_input.values[4]) && (selected_values != previous_selected_values)) {
+		if (input_rc.values[4] != _last_rc_input.values[4]) {
+			//PX4_INFO("RC input changed: Updating rotor positions. Value changed from %u to %u",
+             		//	_last_rc_input.values[4], input_rc.values[4]);
+
+			for (int i = 0; i < 12; i++) {
+				param_t param_handle = param_find(param_names[i]);
+				if (param_handle != PARAM_INVALID) {
+					int result = param_set(param_handle, &selected_values[i]);
+
+					if (result == PX4_OK) {
+						//PX4_INFO("Parameter %s updated to %.2f", param_names[i], double(selected_values[i]));
+
+						// clear update
+						parameter_update_s param_update;
+						_parameter_update_sub.copy(&param_update);
+
+						if (_handled_motor_failure_bitmask == 0) {
+							// We don't update the geometry after an actuator failure, as it could lead to unexpected results
+							// (e.g. a user could add/remove motors, such that the bitmask isn't correct anymore)
+							updateParams();
+							parameters_updated();
+						} else {
+							PX4_ERR("motor bitmask != 0");
+						}
+					} else {
+						PX4_ERR("Failed to update parameter %s", param_names[i]);
+					}
+				} else {
+					PX4_ERR("Parameter %s not found", param_names[i]);
+				}
+			}
+			// previous_selected_values = selected_values;
+			do_update = true;
+		}
+		_last_rc_input = input_rc;
+	}
+	// ---------------------
 
 	if (do_update) {
 		_last_run = now;
