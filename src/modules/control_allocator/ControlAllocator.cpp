@@ -427,9 +427,9 @@ ControlAllocator::Run()
 		if (rc_value < 1200) {
 			selected_values = values_30;
 		} else if (rc_value < 1700) {
-			selected_values = values_30;
+			selected_values = values_60;
 		} else {
-			selected_values = values_30;
+			selected_values = values_90;
 		}
 
 		// if ((input_rc.values[4] != _last_rc_input.values[4]) && (selected_values != previous_selected_values)) {
