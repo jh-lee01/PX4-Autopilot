@@ -49,20 +49,27 @@
 using namespace matrix;
 using namespace time_literals;
 
-// Geometry set 1: Perching
-const float ControlAllocator::values_30[12] = {
-	0.06f, 0.19f, -0.47f,
-	-0.16f, -0.19f, -0.47f,
-	0.06f, -0.19f, -0.47f,
-	-0.16f, 0.19f, -0.47f
+// Geometry set
+const float ControlAllocator::values_0[12] = {
+	0.11f, 0.19f, -0.54f,
+	-0.11f, -0.19f, -0.54f,
+	0.11f, -0.19f, -0.54f,
+	-0.11f, 0.19f, -0.54f
 };
 
-const float ControlAllocator::values_60[12] = {
-	-0.22f, 0.19f, -0.21f,
-	-0.45f, -0.19f, -0.21f,
-	-0.22f, -0.19f, -0.21f,
-	-0.45f, 0.19f, -0.21f
-};
+// const float ControlAllocator::values_30[12] = {
+// 	0.06f, 0.19f, -0.47f,
+// 	-0.16f, -0.19f, -0.47f,
+// 	0.06f, -0.19f, -0.47f,
+// 	-0.16f, 0.19f, -0.47f
+// };
+
+// const float ControlAllocator::values_60[12] = {
+// 	-0.22f, 0.19f, -0.21f,
+// 	-0.45f, -0.19f, -0.21f,
+// 	-0.22f, -0.19f, -0.21f,
+// 	-0.45f, 0.19f, -0.21f
+// };
 
 const float ControlAllocator::values_90[12] = {
 	-0.23f, 0.19f, -0.07f,
@@ -421,19 +428,19 @@ ControlAllocator::Run()
 	float const *selected_values = nullptr;
 
 	if (_input_rc_sub.update(&input_rc)) {
-		// read channel 5
-		uint16_t rc_value = input_rc.values[4];
-
-		if (rc_value < 1200) {
-			selected_values = values_30;
-		} else if (rc_value < 1700) {
-			selected_values = values_60;
-		} else {
+		// read channel 5 (30, 60, 90 perching)
+		uint16_t rc_value_ground = input_rc.values[4];
+		uint16_t rc_value_wall = input_rc.values[8]; // 1500
+		
+		if (rc_value_ground < 1200 && rc_value_wall < 1700) {
 			selected_values = values_90;
+		}
+		else {
+			selected_values = values_0;
 		}
 
 		// if ((input_rc.values[4] != _last_rc_input.values[4]) && (selected_values != previous_selected_values)) {
-		if (input_rc.values[4] != _last_rc_input.values[4]) {
+		if ((input_rc.values[4] != _last_rc_input.values[4]) || (input_rc.values[8] != _last_rc_input.values[8])) {
 			//PX4_INFO("RC input changed: Updating rotor positions. Value changed from %u to %u",
              		//	_last_rc_input.values[4], input_rc.values[4]);
 
