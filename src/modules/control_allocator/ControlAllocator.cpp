@@ -78,11 +78,28 @@ const float ControlAllocator::values_90[12] = {
 	-0.46f, 0.19f, -0.07f
 };
 
-const char *param_names[12] = {
+// roll_p     pitch_p     yaw_p
+// rollrate_p pitchrate_p yawrate_p
+const float ControlAllocator::control_gains_90[6] = {
+	8.0f, 12.0f, 4.5f,
+	0.2f, 0.55f, 0.45f
+};
+
+const float ControlAllocator::control_gains_0[6] = {
+	8.0f, 10.5f, 2.8f,
+	0.35f, 0.65f, 0.1f
+};
+
+const char *geometry_params[12] = {
 	"CA_ROTOR0_PX", "CA_ROTOR0_PY", "CA_ROTOR0_PZ",
 	"CA_ROTOR1_PX", "CA_ROTOR1_PY", "CA_ROTOR1_PZ",
 	"CA_ROTOR2_PX", "CA_ROTOR2_PY", "CA_ROTOR2_PZ",
 	"CA_ROTOR3_PX", "CA_ROTOR3_PY", "CA_ROTOR3_PZ"
+};
+
+const char *control_params[6] = {
+	"MC_ROLL_P", "MC_PITCH_P", "MC_YAW_P",
+	"MC_ROLLHRATE_P", "MC_PITCHRATE_P", "MC_YAWRATE_P"
 };
 
 ControlAllocator::ControlAllocator() :
@@ -424,8 +441,9 @@ ControlAllocator::Run()
 	// ---------------------
 	input_rc_s input_rc;
 
-	// static float const *previous_selected_values = nullptr;
-	float const *selected_values = nullptr;
+	// static float const *previous_selected_geometry = nullptr;
+	float const *selected_geometry = nullptr;
+	float const *selected_gains = nullptr;
 
 	if (_input_rc_sub.update(&input_rc)) {
 		// read channel 5 (30, 60, 90 perching)
@@ -433,25 +451,24 @@ ControlAllocator::Run()
 		uint16_t rc_value_wall = input_rc.values[8]; // 1500
 		
 		if (rc_value_ground < 1200 && rc_value_wall < 1700) {
-			selected_values = values_90;
+			selected_geometry = values_90;
+			selected_gains = control_gains_90;
 		}
 		else {
-			selected_values = values_0;
+			selected_geometry = values_0;
+			selected_gains = control_gains_0;
 		}
 
-		// if ((input_rc.values[4] != _last_rc_input.values[4]) && (selected_values != previous_selected_values)) {
+		// if ((input_rc.values[4] != _last_rc_input.values[4]) && (selected_geometry != previous_selected_geometry)) {
 		if ((input_rc.values[4] != _last_rc_input.values[4]) || (input_rc.values[8] != _last_rc_input.values[8])) {
-			//PX4_INFO("RC input changed: Updating rotor positions. Value changed from %u to %u",
-             		//	_last_rc_input.values[4], input_rc.values[4]);
 
+			// geometry update
 			for (int i = 0; i < 12; i++) {
-				param_t param_handle = param_find(param_names[i]);
+				param_t param_handle = param_find(geometry_params[i]);
 				if (param_handle != PARAM_INVALID) {
-					int result = param_set(param_handle, &selected_values[i]);
+					int result = param_set(param_handle, &selected_geometry[i]);
 
 					if (result == PX4_OK) {
-						//PX4_INFO("Parameter %s updated to %.2f", param_names[i], double(selected_values[i]));
-
 						// clear update
 						parameter_update_s param_update;
 						_parameter_update_sub.copy(&param_update);
@@ -465,13 +482,39 @@ ControlAllocator::Run()
 							PX4_ERR("motor bitmask != 0");
 						}
 					} else {
-						PX4_ERR("Failed to update parameter %s", param_names[i]);
+						PX4_ERR("Failed to update parameter %s", geometry_params[i]);
 					}
 				} else {
-					PX4_ERR("Parameter %s not found", param_names[i]);
+					PX4_ERR("Parameter %s not found", geometry_params[i]);
 				}
 			}
-			// previous_selected_values = selected_values;
+			// control gains update
+			for (int i = 0; i < 6; i++) {
+				param_t param_handle = param_find(control_params[i]);
+				if (param_handle != PARAM_INVALID) {
+					int result = param_set(param_handle, &selected_gains[i]);
+
+					if (result == PX4_OK) {
+						// clear update
+						parameter_update_s param_update;
+						_parameter_update_sub.copy(&param_update);
+
+						if (_handled_motor_failure_bitmask == 0) {
+							// We don't update the geometry after an actuator failure, as it could lead to unexpected results
+							// (e.g. a user could add/remove motors, such that the bitmask isn't correct anymore)
+							updateParams();
+							parameters_updated();
+						} else {
+							PX4_ERR("motor bitmask != 0");
+						}
+					} else {
+						PX4_ERR("Failed to update parameter %s", control_params[i]);
+					}
+				} else {
+					PX4_ERR("Parameter %s not found", control_params[i]);
+				}
+			}
+			// previous_selected_geometry = selected_geometry;
 			do_update = true;
 		}
 		_last_rc_input = input_rc;

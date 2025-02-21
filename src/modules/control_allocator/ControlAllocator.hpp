@@ -223,5 +223,7 @@ private:
 	// static const float values_30[12];
 	// static const float values_60[12];
 	static const float values_90[12];
+	static const float control_gains_90[6];
+	static const float control_gains_0[6];
 
 };
