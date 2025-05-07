@@ -50,6 +50,13 @@ using namespace matrix;
 using namespace time_literals;
 
 // Geometry set 1: Perching
+const float ControlAllocator::values_0[12] = {
+	0.07f, 0.19f, -0.45f,
+	-0.16f, -0.19f, -0.45f,
+	0.07f, -0.19f, -0.45f,
+	-0.16f, 0.19f, -0.45f
+};
+
 const float ControlAllocator::values_30[12] = {
 	0.07f, 0.19f, -0.45f,
 	-0.16f, -0.19f, -0.45f,
@@ -424,9 +431,11 @@ ControlAllocator::Run()
 		// read channel 5
 		uint16_t rc_value = input_rc.values[4];
 
-		if (rc_value < 1200) {
+		if (rc_value < 1243) {
+			selected_values = values_0;
+		} else if (rc_value < 1500) {
 			selected_values = values_30;
-		} else if (rc_value < 1700) {
+		} else if (rc_value < 1755) {
 			selected_values = values_60;
 		} else {
 			selected_values = values_90;

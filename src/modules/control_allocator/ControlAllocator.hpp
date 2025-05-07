@@ -219,6 +219,7 @@ private:
 
 	input_rc_s _last_rc_input;
 
+	static const float values_0[12];
 	static const float values_30[12];
 	static const float values_60[12];
 	static const float values_90[12];
