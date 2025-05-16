@@ -57,9 +57,36 @@ void
 ControlAllocationPseudoInverse::updatePseudoInverse()
 {
 	if (_mix_update_needed) {
-		matrix::geninv(_effectiveness, _mix);
+		matrix::Matrix<float, 4UL, 4UL> eff_tmp;
+		eff_tmp(0, 0) = _effectiveness(0, 0); eff_tmp(0, 1) = _effectiveness(0, 1); eff_tmp(0, 2) = _effectiveness(0, 2); eff_tmp(0, 3) = _effectiveness(0, 3);
+		eff_tmp(1, 0) = _effectiveness(1, 0); eff_tmp(1, 1) = _effectiveness(1, 1); eff_tmp(1, 2) = _effectiveness(1, 2); eff_tmp(1, 3) = _effectiveness(1, 3);
+		eff_tmp(2, 0) = _effectiveness(2, 0); eff_tmp(2, 1) = _effectiveness(2, 1); eff_tmp(2, 2) = _effectiveness(2, 2); eff_tmp(2, 3) = _effectiveness(2, 3);
+		eff_tmp(3, 0) = _effectiveness(5, 0); eff_tmp(3, 1) = _effectiveness(5, 1); eff_tmp(3, 2) = _effectiveness(5, 2); eff_tmp(3, 3) = _effectiveness(5, 3);
 
-		if (_normalization_needs_update && !_had_actuator_failure) {
+		// for (int i = 0; i < 4; i++) {
+		// 	PX4_INFO("eff_tmp(%d, *): %f %f %f %f", i, double (eff_tmp(i, 0)), double (eff_tmp(i, 1)), double (eff_tmp(i, 2)),
+		// 		 double (eff_tmp(i, 3)));
+		// }
+
+		matrix::Matrix<float, 4UL, 4UL> mix_tmp;
+		matrix::geninv(eff_tmp, mix_tmp);
+
+		_mix.setZero();
+		_mix(0, 0) = mix_tmp(0, 0); _mix(0, 1) = mix_tmp(0, 1); _mix(0, 2) = mix_tmp(0, 2); _mix(0, 5) = mix_tmp(0, 3);
+		_mix(1, 0) = mix_tmp(1, 0); _mix(1, 1) = mix_tmp(1, 1); _mix(1, 2) = mix_tmp(1, 2); _mix(1, 5) = mix_tmp(1, 3);
+		_mix(2, 0) = mix_tmp(2, 0); _mix(2, 1) = mix_tmp(2, 1); _mix(2, 2) = mix_tmp(2, 2); _mix(2, 5) = mix_tmp(2, 3);
+		_mix(3, 0) = mix_tmp(3, 0); _mix(3, 1) = mix_tmp(3, 1); _mix(3, 2) = mix_tmp(3, 2); _mix(3, 5) = mix_tmp(3, 3);
+
+		// matrix::geninv(_effectiveness, _mix);
+
+		// for (int i = 0; i < NUM_ACTUATORS; i++) {
+		// 	PX4_INFO("mix(%d, *): %f %f %f %f %f %f", i, double (_mix(i, 0)), double (_mix(i, 1)), double (_mix(i, 2)),
+		// 		 double (_mix(i, 3)), double (_mix(i, 4)), double (_mix(i, 5)));
+		// }
+
+		// matrix::geninv(_effectiveness, _mix);
+
+		if (!_had_actuator_failure) {
 			updateControlAllocationMatrixScale();
 			_normalization_needs_update = false;
 		}
