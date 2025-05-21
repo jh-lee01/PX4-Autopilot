@@ -72,10 +72,10 @@ const float ControlAllocator::values_60[12] = {
 };
 
 const float ControlAllocator::values_90[12] = {
-	-0.24f,  0.19f, -0.02f,
-	-0.46f, -0.19f, -0.02f,
-	-0.24f, -0.19f, -0.02f,
-	-0.46f,  0.19f, -0.02f
+	-0.30f,  0.19f, 0.03f,
+	-0.52f, -0.19f, 0.03f,
+	-0.30f, -0.19f, 0.03f,
+	-0.52f,  0.19f, 0.03f
 };
 
 const char *param_names[12] = {
