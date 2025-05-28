@@ -228,7 +228,7 @@ MulticopterRateControl::Run()
 
 			_thrust_setpoint.copyTo(vehicle_thrust_setpoint.xyz);
 			vehicle_torque_setpoint.xyz[0] = PX4_ISFINITE(att_control(0)) ? att_control(0) : 0.f;
-			vehicle_torque_setpoint.xyz[1] = PX4_ISFINITE(att_control(1)) ? att_control(1) : 0.f;
+			vehicle_torque_setpoint.xyz[1] = PX4_ISFINITE(att_control(1)) ? math::min(att_control(1), 0.f) : 0.f;
 			vehicle_torque_setpoint.xyz[2] = PX4_ISFINITE(att_control(2)) ? att_control(2) : 0.f;
 
 			// scale setpoints by battery status if enabled
