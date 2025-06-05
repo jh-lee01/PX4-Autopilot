@@ -429,16 +429,27 @@ ControlAllocator::Run()
 
 	if (_input_rc_sub.update(&input_rc)) {
 		// read channel 5
-		uint16_t rc_value = input_rc.values[4];
-
-		if (rc_value < 1243) {
-			selected_values = values_0;
-		} else if (rc_value < 1500) {
-			selected_values = values_30;
-		} else if (rc_value < 1755) {
-			selected_values = values_60;
-		} else {
-			selected_values = values_90;
+		uint16_t rc_value_1 = input_rc.values[4];
+		uint16_t rc_value_2 = input_rc.values[8];
+		
+		// 8, 2006 982
+		if (rc_value_2 >= 1750) {
+			if (rc_value_1 < 1750) {
+				selected_values = values_0;
+			} else if (rc_value_1 >= 1750) {
+				selected_values = values_90;
+			}
+		}
+		else {
+			if (rc_value_1 < 1250) {
+				selected_values = values_0;
+			} else if (rc_value_1 < 1500) {
+				selected_values = values_30;
+			} else if (rc_value_1 < 1755) {
+				selected_values = values_90;
+			} else {
+				selected_values = values_90;
+			}
 		}
 
 		// if ((input_rc.values[4] != _last_rc_input.values[4]) && (selected_values != previous_selected_values)) {
