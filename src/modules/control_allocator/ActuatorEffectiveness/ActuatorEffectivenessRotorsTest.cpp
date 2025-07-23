@@ -133,3 +133,98 @@ TEST(ActuatorEffectivenessRotors, Tilt)
 	axis = ActuatorEffectivenessRotors::tiltedAxis(-M_PI_F / 2.f, M_PI_F / 2.f);
 	EXPECT_EQ(axis, axis_expected);
 }
+
+TEST(ActuatorEffectivenessRotors, Values30Geometry)
+{
+	const float values_30[12] = {
+		0.06f,  0.19f, -0.47f,
+		-0.17f, -0.19f, -0.47f,
+		0.06f, -0.19f, -0.47f,
+		-0.17f,  0.19f, -0.47f
+	};
+
+	const float axis[12] = {
+		-42.3f, 0.f, -90.6f,
+		42.3f, 0.f, -90.6f,
+		-42.3f, 0.f, -90.6f,
+		42.3f, 0.f, -90.6f
+	};
+
+	ActuatorEffectivenessRotors::Geometry geometry = {};
+	geometry.num_rotors = 4;
+
+	for (int i = 0; i < 4; i++) {
+		geometry.rotors[i].position(0) = values_30[i * 3 + 0];
+		geometry.rotors[i].position(1) = values_30[i * 3 + 1];
+		geometry.rotors[i].position(2) = values_30[i * 3 + 2];
+
+		geometry.rotors[i].axis(0) = axis[i * 3 + 0] * M_DEG_TO_RAD_F;
+		geometry.rotors[i].axis(1) = axis[i * 3 + 1] * M_DEG_TO_RAD_F;
+		geometry.rotors[i].axis(2) = axis[i * 3 + 2] * M_DEG_TO_RAD_F;
+
+		geometry.rotors[i].thrust_coef = 6.f;
+		geometry.rotors[i].moment_ratio = (i % 2 == 0) ? 0.01f : -0.01f;
+	}
+
+	ActuatorEffectiveness::EffectivenessMatrix effectiveness;
+	effectiveness.setZero();
+	ActuatorEffectivenessRotors::computeEffectivenessMatrix(geometry, effectiveness);
+
+	std::cout << "=== Effectiveness Matrix (values_30) ===" << std::endl;
+	for (int i = 0; i < ActuatorEffectiveness::NUM_AXES; i++) {
+		for (int j = 0; j < ActuatorEffectiveness::NUM_ACTUATORS; j++) {
+			std::cout << effectiveness(i, j) << " ";
+		}
+		std::cout << std::endl;
+	}
+
+	EXPECT_TRUE(false);
+}
+
+TEST(ActuatorEffectivenessRotors, Values0Geometry)
+{
+	const float values_0[12] = {
+		0.11f,  0.19f, -0.48f,
+		-0.11f, -0.19f, -0.48f,
+		0.11f, -0.19f, -0.48f,
+		-0.11f,  0.19f, -0.48f
+	};
+
+	const float axis[12] = {
+		-42.3f, 0.f, -90.6f,
+		42.3f, 0.f, -90.6f,
+		-42.3f, 0.f, -90.6f,
+		42.3f, 0.f, -90.6f
+	};
+
+	ActuatorEffectivenessRotors::Geometry geometry = {};
+	geometry.num_rotors = 4;
+
+	for (int i = 0; i < 4; i++) {
+		geometry.rotors[i].position(0) = values_0[i * 3 + 0];
+		geometry.rotors[i].position(1) = values_0[i * 3 + 1];
+		geometry.rotors[i].position(2) = values_0[i * 3 + 2];
+
+		geometry.rotors[i].axis(0) = axis[i * 3 + 0] * M_DEG_TO_RAD_F;
+		geometry.rotors[i].axis(1) = axis[i * 3 + 1] * M_DEG_TO_RAD_F;
+		geometry.rotors[i].axis(2) = axis[i * 3 + 2] * M_DEG_TO_RAD_F;
+
+		geometry.rotors[i].thrust_coef = 6.f;
+		geometry.rotors[i].moment_ratio = (i % 2 == 0) ? 0.01f : -0.01f;
+	}
+
+	ActuatorEffectiveness::EffectivenessMatrix effectiveness;
+	effectiveness.setZero();
+	ActuatorEffectivenessRotors::computeEffectivenessMatrix(geometry, effectiveness);
+
+	std::cout << "=== Effectiveness Matrix (values_0) ===" << std::endl;
+	for (int i = 0; i < ActuatorEffectiveness::NUM_AXES; i++) {
+		for (int j = 0; j < ActuatorEffectiveness::NUM_ACTUATORS; j++) {
+			std::cout << effectiveness(i, j) << " ";
+		}
+		std::cout << std::endl;
+	}
+
+	EXPECT_TRUE(false);
+}
+

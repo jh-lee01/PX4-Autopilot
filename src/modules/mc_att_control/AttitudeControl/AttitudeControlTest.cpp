@@ -34,6 +34,8 @@
 #include <gtest/gtest.h>
 #include <AttitudeControl.hpp>
 #include <mathlib/math/Functions.hpp>
+#include <fstream>
+#include <sstream>
 
 using namespace matrix;
 
@@ -138,3 +140,116 @@ TEST(AttitudeControlTest, YawWeightScaling)
 	// THEN: no actuation (also no NAN)
 	EXPECT_EQ(rate_setpoint, Vector3f());
 }
+
+TEST(AttitudeControlTest, ReplayFromLog)
+{
+    AttitudeControl attitude_control;
+    attitude_control.setProportionalGain(Vector3f(9.f, 5.f, 4.5f), 0.4f);
+    attitude_control.setRateLimit(Vector3f(220.f, 220.f, 200.f));
+
+    std::ifstream att_file("/home/carroll/PX4-Autopilot/build/px4_sitl_default/csv_output/log_vehicle_attitude_0.csv");
+    std::ifstream att_sp_file("/home/carroll/PX4-Autopilot/build/px4_sitl_default/csv_output/log_vehicle_attitude_setpoint_0.csv");
+
+    if (!att_file.is_open() || !att_sp_file.is_open()) {
+        FAIL() << "Failed to open log files for reading.";
+        return;
+    }
+
+    // 첫 줄(헤더) 스킵
+    std::string line_att, line_sp;
+    getline(att_file, line_att);
+    getline(att_sp_file, line_sp);
+
+    while (getline(att_file, line_att) && getline(att_sp_file, line_sp)) {
+        std::stringstream ss_att(line_att);
+        std::stringstream ss_sp(line_sp);
+
+        std::vector<std::string> tokens_att;
+        std::vector<std::string> tokens_sp;
+        std::string token;
+
+        // attitude CSV 파싱
+        while (std::getline(ss_att, token, ',')) {
+            tokens_att.push_back(token);
+        }
+        // setpoint CSV 파싱
+        while (std::getline(ss_sp, token, ',')) {
+            tokens_sp.push_back(token);
+        }
+
+        if (tokens_att.size() < 6 || tokens_sp.size() < 6) {
+            std::cerr << "Skipping invalid line.\n";
+            continue;
+        }
+
+        double ts_att = std::stod(tokens_att[0]);
+        float q0  = std::stof(tokens_att[2]);
+        float q1  = std::stof(tokens_att[3]);
+        float q2  = std::stof(tokens_att[4]);
+        float q3  = std::stof(tokens_att[5]);
+
+        double ts_sp = std::stod(tokens_sp[0]);
+        float qd0 = std::stof(tokens_sp[2]);
+        float qd1 = std::stof(tokens_sp[3]);
+        float qd2 = std::stof(tokens_sp[4]);
+        float qd3 = std::stof(tokens_sp[5]);
+
+        Quatf quat_state(q0, q1, q2, q3);
+        Quatf quat_setpoint(qd0, qd1, qd2, qd3);
+
+        // NaN 체크 및 정규화
+        if (!PX4_ISFINITE(quat_state.norm()) || quat_state.norm() < 1e-6f) {
+            printf("[WARN] Invalid quat_state at t=%.3f\n", ts_att * 1e-6);
+            continue;
+        }
+        if (!PX4_ISFINITE(quat_setpoint.norm()) || quat_setpoint.norm() < 1e-6f) {
+            printf("[WARN] Invalid quat_setpoint at t=%.3f\n", ts_sp * 1e-6);
+            continue;
+        }
+        quat_state.normalize();
+        quat_setpoint.normalize();
+
+        attitude_control.setAttitudeSetpoint(quat_setpoint, 0.f);
+        Vector3f rate_setpoint = attitude_control.update(quat_state);
+
+        printf("[t=%.3f] rate_sp: [%.3f, %.3f, %.3f]\n",
+               ts_att * 1e-6,
+               (double)rate_setpoint(0),
+               (double)rate_setpoint(1),
+               (double)rate_setpoint(2));
+    }
+
+    EXPECT_TRUE(false);
+}
+
+
+// TEST(AttitudeControlTest, PitchResponse)
+// {
+// 	AttitudeControl attitude_control;
+// 	attitude_control.setProportionalGain(Vector3f(9.f, 5.f, 4.5f), .4f);
+// 	attitude_control.setRateLimit(Vector3f(220.f, 220.f, 200.f));
+
+// 	Quatf quat_state;
+// 	quat_state.setIdentity();
+
+// 	float roll_deg = 0.0f;
+// 	float pitch_deg = -1.1576f;
+// 	float yaw_deg = 0.0f;
+
+// 	float roll_rad = math::radians(roll_deg);
+// 	float pitch_rad = math::radians(pitch_deg);
+// 	float yaw_rad = math::radians(yaw_deg);
+
+// 	Quatf quat_setpoint(Eulerf(roll_rad, pitch_rad, yaw_rad));
+// 	attitude_control.setAttitudeSetpoint(quat_setpoint, 0.f);
+
+// 	Vector3f rate_setpoint = attitude_control.update(quat_state);
+
+// 	printf("[Fixed Pitch] RollSP=%.4f deg, PitchSP=%.4f deg, YawSP=%.4f deg -> rate_setpoint: [%.4f, %.4f, %.4f]\n",
+// 		(double)roll_deg, (double)pitch_deg, (double)yaw_deg,
+// 		(double)rate_setpoint(0),
+// 		(double)rate_setpoint(1),
+// 		(double)rate_setpoint(2));
+
+// 	EXPECT_TRUE(false);
+// }

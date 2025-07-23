@@ -51,31 +51,31 @@ using namespace time_literals;
 
 // Geometry set 1: Perching
 const float ControlAllocator::values_0[12] = {
-	 0.11f,  0.19f, -0.51f,
-	-0.11f, -0.19f, -0.51f,
-	 0.11f, -0.19f, -0.51f,
-	-0.11f,  0.19f, -0.51f
+	 0.11f,  0.19f, -0.48f,
+	-0.11f, -0.19f, -0.48f,
+	 0.11f, -0.19f, -0.48f,
+	-0.11f,  0.19f, -0.48f
 };
 
 const float ControlAllocator::values_30[12] = {
-	 0.06f,  0.19f, -0.51f,
-	-0.17f, -0.19f, -0.51f,
-	 0.06f, -0.19f, -0.51f,
-	-0.17f,  0.19f, -0.51f
+	 0.11f,  0.19f, -0.48f,
+	-0.11f, -0.19f, -0.48f,
+	 0.11f, -0.19f, -0.48f,
+	-0.11f,  0.19f, -0.48f
 };
 
 const float ControlAllocator::values_60[12] = {
-	-0.28f,  0.19f, -0.23f,
-	-0.51f, -0.19f, -0.23f,
-	-0.28f, -0.19f, -0.23f,
-	-0.51f,  0.19f, -0.23f
+	-0.21f,  0.19f, -0.32f,
+	-0.44f, -0.19f, -0.32f,
+	-0.21f, -0.19f, -0.32f,
+	-0.44f,  0.19f, -0.32f
 };
 
 const float ControlAllocator::values_90[12] = {
-	-0.29f,  0.19f, 0.02f,
-	-0.52f, -0.19f, 0.02f,
-	-0.29f, -0.19f, 0.02f,
-	-0.52f,  0.19f, 0.02f
+	-0.29f,  0.19f, 0.06f,
+	-0.52f, -0.19f, 0.06f,
+	-0.29f, -0.19f, 0.06f,
+	-0.52f,  0.19f, 0.06f
 };
 
 const char *param_names[12] = {
@@ -442,9 +442,9 @@ ControlAllocator::Run()
 		}
 		else {
 			if (rc_value_1 < 1250) {
-				selected_values = values_0;
-			} else if (rc_value_1 < 1500) {
 				selected_values = values_30;
+			} else if (rc_value_1 < 1500) {
+				selected_values = values_0;
 			} else if (rc_value_1 < 1755) {
 				selected_values = values_60;
 			} else {

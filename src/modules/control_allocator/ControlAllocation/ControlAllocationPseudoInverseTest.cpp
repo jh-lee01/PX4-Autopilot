@@ -1,69 +1,61 @@
-/****************************************************************************
- *
- *   Copyright (C) 2019 PX4 Development Team. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- * 3. Neither the name PX4 nor the names of its contributors may be
- *    used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
- * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- *
- ****************************************************************************/
-
-/**
- * @file ControlAllocationTest.cpp
- *
- * Tests for Control Allocation Algorithms
- *
- * @author Julien Lecoeur <julien.lecoeur@gmail.com>
- */
-
+#define MODULE_NAME "ControlAllocationPseudoInverseTest"
 #include <gtest/gtest.h>
 #include <ControlAllocationPseudoInverse.hpp>
+#include <matrix/matrix/math.hpp>
+#include <iostream>
+#include <iomanip>
 
 using namespace matrix;
 
-TEST(ControlAllocationTest, AllZeroCase)
+TEST(ControlAllocationPseudoInverseTest, SingleStep)
 {
-	ControlAllocationPseudoInverse method;
+    ControlAllocationPseudoInverse method;
 
-	matrix::Vector<float, 6> control_sp;
-	matrix::Vector<float, 6> control_allocated;
-	matrix::Vector<float, 6> control_allocated_expected;
-	matrix::Matrix<float, 6, 16> effectiveness;
-	matrix::Vector<float, 16> actuator_sp;
-	matrix::Vector<float, 16> actuator_trim;
-	matrix::Vector<float, 16> linearization_point;
-	matrix::Vector<float, 16> actuator_sp_expected;
+    // --- Effectiveness Matrix 설정 (간단 예시: 4개 모터) ---
+    Matrix<float, 6, 16> effectiveness{};
+    effectiveness(0,0) = -1.00758f; effectiveness(0,1) =  1.05834f;
+    effectiveness(0,2) =  1.05834f; effectiveness(0,3) = -1.00758f;
+    effectiveness(1,0) =  1.51920f; effectiveness(1,1) = -2.11723f;
+    effectiveness(1,2) =  1.51920f; effectiveness(1,3) = -2.11723f;
+    effectiveness(2,0) =  0.53664f; effectiveness(2,1) =  0.42791f;
+    effectiveness(2,2) = -0.42791f; effectiveness(2,3) = -0.53664f;
+    effectiveness(3,0) = -2.53830f; effectiveness(3,1) =  2.53830f;
+    effectiveness(3,2) = -2.53830f; effectiveness(3,3) =  2.53830f;
+    effectiveness(5,0) = -5.43664f; effectiveness(5,1) = -5.43664f;
+    effectiveness(5,2) = -5.43664f; effectiveness(5,3) = -5.43664f;
 
-	method.setEffectivenessMatrix(effectiveness, actuator_trim, linearization_point, 16, false);
-	method.setControlSetpoint(control_sp);
-	method.allocate();
-	method.clipActuatorSetpoint();
-	actuator_sp = method.getActuatorSetpoint();
-	control_allocated_expected = method.getAllocatedControl();
+    Vector<float, 16> actuator_trim{};
+    Vector<float, 16> linearization_point{};
+    method.setEffectivenessMatrix(effectiveness, actuator_trim, linearization_point, 16, false);
 
-	EXPECT_EQ(actuator_sp, actuator_sp_expected);
-	EXPECT_EQ(control_allocated, control_allocated_expected);
+    // --- 테스트용 단일 입력 (rate_control_output.csv에서 가져옴) ---
+    float torque_x = -0.098654f;
+    float torque_y = 0.714495f;
+    float torque_z = -0.003042f;
+    float thrust_z = -0.25015f;  // 예시로 thrust_setpoint_0.csv에서 가져온 값 사용
+	// time_s,dt,rate_x,rate_y,rate_z,rate_sp_x,rate_sp_y,rate_sp_z,torque_x,torque_y,torque_z
+	// 4594.530245,0.014777,0.144274,-0.093653,0.038884,0.009617,0.451762,0.029816,-0.098654,0.714495,-0.003042
+
+    // ControlAllocation 입력 구성
+    Vector<float, 6> control_sp;
+    control_sp.zero();
+    control_sp(2) = thrust_z;    // Fz
+    control_sp(3) = torque_x;
+    control_sp(4) = torque_y;
+    control_sp(5) = torque_z;
+
+    // Control Allocation 실행
+    method.setControlSetpoint(control_sp);
+    method.allocate();
+    // method.clipActuatorSetpoint();
+    Vector<float, 16> actuator_sp = method.getActuatorSetpoint();
+
+    // 결과 출력
+    std::cout << std::fixed << std::setprecision(6);
+    std::cout << "[RAW] actuator_sp: ";
+    for (int i = 0; i < 4; i++) {
+        std::cout << actuator_sp(i) << (i < 3 ? ", " : "\n");
+    }
+
+    EXPECT_TRUE(false);
 }
