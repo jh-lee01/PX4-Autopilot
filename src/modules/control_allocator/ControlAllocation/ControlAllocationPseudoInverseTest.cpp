@@ -41,12 +41,15 @@
 #define MODULE_NAME "control_allocation_test"
 #include <gtest/gtest.h>
 #include <ControlAllocationPseudoInverse.hpp>
+#include <matrix/matrix/math.hpp>
+#include <iostream>
+#include <iomanip>
 
 using namespace matrix;
 
-TEST(ControlAllocationTest, AllZeroCase)
+TEST(ControlAllocationPseudoInverseTest, SingleStep)
 {
-	ControlAllocationPseudoInverse method;
+    ControlAllocationPseudoInverse method;
 
 	matrix::Vector<float, 6> control_sp;
 	matrix::Vector<float, 6> control_allocated;

@@ -442,11 +442,11 @@ ControlAllocator::Run()
 		}
 		else {
 			if (rc_value_1 < 1250) {
-				selected_values = values_0;
-			} else if (rc_value_1 < 1500) {
 				selected_values = values_30;
+			} else if (rc_value_1 < 1500) {
+				selected_values = values_0;
 			} else if (rc_value_1 < 1755) {
-				selected_values = values_90;
+				selected_values = values_60;
 			} else {
 				selected_values = values_90;
 			}
