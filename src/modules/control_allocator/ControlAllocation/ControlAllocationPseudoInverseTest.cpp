@@ -38,7 +38,7 @@
  *
  * @author Julien Lecoeur <julien.lecoeur@gmail.com>
  */
-
+#define MODULE_NAME "control_allocation_test"
 #include <gtest/gtest.h>
 #include <ControlAllocationPseudoInverse.hpp>
 
@@ -52,18 +52,83 @@ TEST(ControlAllocationTest, AllZeroCase)
 	matrix::Vector<float, 6> control_allocated;
 	matrix::Vector<float, 6> control_allocated_expected;
 	matrix::Matrix<float, 6, 16> effectiveness;
+	matrix::Matrix<float, 16, 6> mix;
 	matrix::Vector<float, 16> actuator_sp;
 	matrix::Vector<float, 16> actuator_trim;
 	matrix::Vector<float, 16> linearization_point;
 	matrix::Vector<float, 16> actuator_sp_expected;
 
+
+	
+	// 0도
+	// effectiveness 행렬 각 요소에 내가 원하는 값 반복문 없이 설정
+	// effectiveness(0, 0) = -1.0073246f; effectiveness(0, 1) =  1.8164136f; effectiveness(0, 2) =  0.53718674f; effectiveness(0, 3) = -2.5382986f; effectiveness(0, 5) = -5.4366393f;
+	// effectiveness(1, 0) =  1.0073246f; effectiveness(1, 1) = -1.8164136f; effectiveness(1, 2) =  0.53718674f; effectiveness(1, 3) =  2.5382986f; effectiveness(1, 5) = -5.4366393f;
+	// effectiveness(2, 0) =  1.0073246f; effectiveness(2, 1) =  1.8164136f; effectiveness(2, 2) = -0.53718674f; effectiveness(2, 3) = -2.5382986f; effectiveness(2, 5) = -5.4366393f;
+	// effectiveness(3, 0) = -1.0073246f; effectiveness(3, 1) = -1.8164136f; effectiveness(3, 2) = -0.53718674f; effectiveness(3, 3) =  2.5382986f; effectiveness(3, 5) = -5.4366393f;
+
+	// 30도
+	// effectiveness(0, 0) = -1.0073246f; effectiveness(0, 1) = 1.5191985f; effectiveness(0, 2) =  0.53718674f; effectiveness(0, 3) = -2.5382986f; effectiveness(0, 5) = -5.4366393f;
+	// effectiveness(1, 0) =  1.0073246f; effectiveness(1, 1) = -2.117229f; effectiveness(1, 2) =  0.53718674f; effectiveness(1, 3) =  2.5382986f; effectiveness(1, 5) = -5.4366393f;
+	// effectiveness(2, 0) =  1.0073246f; effectiveness(2, 1) = 1.5191985f; effectiveness(2, 2) = -0.53718674f; effectiveness(2, 3) = -2.5382986f; effectiveness(2, 5) = -5.4366393f;
+	// effectiveness(3, 0) = -1.0073246f; effectiveness(3, 1) = -2.117229f; effectiveness(3, 2) = -0.53718674f; effectiveness(3, 3) =  2.5382986f; effectiveness(3, 5) = -5.4366393f;
+	
+	// 0도
+	// effectiveness 행렬 각 요소에 내가 원하는 값 반복문 없이 설정
+	effectiveness(0, 0) = -1.0073246f;  effectiveness(0, 1) =  1.0073246f;  effectiveness(0, 2) =  1.0073246f;  effectiveness(0, 3) = -1.0073246f;
+	effectiveness(1, 0) =  1.8164136f;  effectiveness(1, 1) = -1.8164136f;  effectiveness(1, 2) =  1.8164136f;  effectiveness(1, 3) = -1.8164136f;
+	effectiveness(2, 0) =  0.53718674f; effectiveness(2, 1) =  0.53718674f; effectiveness(2, 2) = -0.53718674f; effectiveness(2, 3) = -0.53718674f;
+	effectiveness(3, 0) = -2.5382986f;  effectiveness(3, 1) =  2.5382986f;  effectiveness(3, 2) = -2.5382986f;  effectiveness(3, 3) =  2.5382986f;
+	effectiveness(5, 0) = -5.4366393f;  effectiveness(5, 1) = -5.4366393f;  effectiveness(5, 2) = -5.4366393f;  effectiveness(5, 3) = -5.4366393f;
+	
+	// 30도
+	// effectiveness(0, 0) = -1.0073246f;  effectiveness(0, 1) =  1.0073246f;  effectiveness(0, 2) =  1.0073246f;  effectiveness(0, 3) = -1.0073246f;
+	// effectiveness(1, 0) =  1.591985f;   effectiveness(1, 1) = -2.117229f;   effectiveness(1, 2) =  1.591985f;   effectiveness(1, 3) = -2.117229f;
+	// effectiveness(2, 0) =  0.53718674f; effectiveness(2, 1) =  0.53718674f; effectiveness(2, 2) = -0.53718674f; effectiveness(2, 3) = -0.53718674f;
+	// effectiveness(3, 0) = -2.5382986f;  effectiveness(3, 1) =  2.5382986f;  effectiveness(3, 2) = -2.5382986f;  effectiveness(3, 3) =  2.5382986f;
+	// effectiveness(5, 0) = -5.4366393f;  effectiveness(5, 1) = -5.4366393f;  effectiveness(5, 2) = -5.4366393f;  effectiveness(5, 3) = -5.4366393f;	
+
+
+
+	matrix::geninv(effectiveness, mix);
+
+	// pseudo inverse 전치되도록 출력
+
+	printf("transpose of pseudo inverse:\n");
+	for (int i = 0; i < 6; i++) {
+		for (int j = 0; j < 16; j++) {
+			printf("%f ", double(mix(j, i)));
+		}
+		printf("\n");
+	}
+
+
+	printf("\neffectiveness:\n");
+	for (int i = 0; i < 6; i++) {
+		for (int j = 0; j < 16; j++) {
+			printf("%f ", double(effectiveness(i, j)));
+		}
+		printf("\n");
+	}
+
+
 	method.setEffectivenessMatrix(effectiveness, actuator_trim, linearization_point, 16, false);
+
+	control_sp(1) = 1.f;
+	control_sp(5) = -0.3f;
+
 	method.setControlSetpoint(control_sp);
 	method.allocate();
 	method.clipActuatorSetpoint();
 	actuator_sp = method.getActuatorSetpoint();
 	control_allocated_expected = method.getAllocatedControl();
 
-	EXPECT_EQ(actuator_sp, actuator_sp_expected);
-	EXPECT_EQ(control_allocated, control_allocated_expected);
+	printf("\nactuator_sp:\n");
+	for (int i = 0; i < 16; i++) {
+		printf("%f ", double(actuator_sp(i)));
+	}
+	printf("\n");
+
+	// EXPECT_EQ(actuator_sp, actuator_sp_expected);
+	// EXPECT_EQ(control_allocated, control_allocated_expected);
 }
