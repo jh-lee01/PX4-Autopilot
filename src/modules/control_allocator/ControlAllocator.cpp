@@ -57,18 +57,11 @@ const float ControlAllocator::values_0[12] = {
    -0.11f,  0.19f, -0.48f
 };
 
-const float ControlAllocator::values_30[12] = {
-	0.11f,  0.19f, -0.48f,
-   -0.11f, -0.19f, -0.48f,
-	0.11f, -0.19f, -0.48f,
-   -0.11f,  0.19f, -0.48f
-};
-
-const float ControlAllocator::values_60[12] = {
-   -0.23,  0.19f, -0.30f,
-   -0.46, -0.19f, -0.30f,
-   -0.23, -0.19f, -0.30f,
-   -0.46,  0.19f, -0.30f,
+const float ControlAllocator::values_air[12] = {
+	0.11f,  0.19f, -0.058f,
+   -0.11f, -0.19f, -0.058f,
+	0.11f, -0.19f, -0.058f,
+   -0.11f,  0.19f, -0.058f
 };
 
 const float ControlAllocator::values_90[12] = {
@@ -429,27 +422,18 @@ ControlAllocator::Run()
 
 	if (_input_rc_sub.update(&input_rc)) {
 		// read channel 5
-		uint16_t rc_value_1 = input_rc.values[4];
-		uint16_t rc_value_2 = input_rc.values[8];
+		uint16_t rc_value_1 = input_rc.values[4]; // dial switch
+		uint16_t rc_value_2 = input_rc.values[8]; // toggle switch
 		
 		// 8, 2006 982
-		if (rc_value_2 >= 1750) {
-			if (rc_value_1 < 1750) {
-				selected_values = values_0;
-			} else if (rc_value_1 >= 1750) {
-				selected_values = values_90;
-			}
-		}
-		else {
-			if (rc_value_1 < 1250) {
-				selected_values = values_30;
-			} else if (rc_value_1 < 1500) {
-				selected_values = values_0;
-			} else if (rc_value_1 < 1755) {
-				selected_values = values_60;
-			} else {
-				selected_values = values_90;
-			}
+		if (rc_value_2 < 1250){
+			selected_values = values_0;
+		} 
+		else if (rc_value_2 < 1750) {
+			selected_values = values_air;
+		} 
+		else  {
+			selected_values = values_90;
 		}
 
 		// if ((input_rc.values[4] != _last_rc_input.values[4]) && (selected_values != previous_selected_values)) {
