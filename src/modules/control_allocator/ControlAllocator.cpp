@@ -422,7 +422,7 @@ ControlAllocator::Run()
 
 	if (_input_rc_sub.update(&input_rc)) {
 		// read channel 5
-		uint16_t rc_value_1 = input_rc.values[4]; // dial switch
+		// uint16_t rc_value_1 = input_rc.values[4]; // dial switch
 		uint16_t rc_value_2 = input_rc.values[8]; // toggle switch
 		
 		// 8, 2006 982
