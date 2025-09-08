@@ -437,7 +437,7 @@ ControlAllocator::Run()
 		}
 
 		// if ((input_rc.values[4] != _last_rc_input.values[4]) && (selected_values != previous_selected_values)) {
-		if (input_rc.values[4] != _last_rc_input.values[4]) {
+		if (input_rc.values[8] != _last_rc_input.values[8]) {
 			//PX4_INFO("RC input changed: Updating rotor positions. Value changed from %u to %u",
              		//	_last_rc_input.values[4], input_rc.values[4]);
 
