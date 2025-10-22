@@ -64,6 +64,13 @@ const float ControlAllocator::values_air[12] = {
    -0.11f,  0.19f, -0.058f
 };
 
+const float ControlAllocator::values_air_leg_front[12] = {
+	0.0475f,  0.19f, -0.013f,
+   -0.1725, -0.19f, -0.013f,
+	0.0475f, -0.19f, -0.013f,
+   -0.1725f,  0.19f, -0.013f
+};
+
 const float ControlAllocator::values_90[12] = {
    -0.29f,  0.19f, 0.06f,
    -0.51f, -0.19f, 0.06f,
@@ -422,16 +429,19 @@ ControlAllocator::Run()
 
 	if (_input_rc_sub.update(&input_rc)) {
 		// read channel 5
-		// uint16_t rc_value_1 = input_rc.values[4]; // dial switch
+		uint16_t rc_value_1 = input_rc.values[4]; // dial switch
 		uint16_t rc_value_2 = input_rc.values[8]; // toggle switch
 		
 		// 8, 2006 982
 		if (rc_value_2 < 1250){
 			selected_values = values_0;
 		} 
-		else if (rc_value_2 < 1750) {
+		else if (rc_value_2 < 1750 && rc_value_1 < 1500) {
 			selected_values = values_air;
 		} 
+		else if (rc_value_2 < 1750 && rc_value_1 >= 1500) {
+			selected_values = values_air_leg_front;
+		}
 		else  {
 			selected_values = values_90;
 		}

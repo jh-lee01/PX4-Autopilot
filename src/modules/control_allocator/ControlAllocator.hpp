@@ -224,5 +224,6 @@ private:
 	static const float values_60[12];
 	static const float values_90[12];
 	static const float values_air[12];
+	static const float values_air_leg_front[12];
 
 };
